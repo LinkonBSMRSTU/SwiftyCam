@@ -303,7 +303,7 @@ open class SwiftyCamViewController: UIViewController {
 
 	override open func viewDidLoad() {
 		super.viewDidLoad()
-        previewLayer = PreviewView(frame: view.frame, videoGravity: videoGravity)
+        previewLayer = PreviewView(frame: CGRect.init(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height), videoGravity: .resizeAspectFill)
         previewLayer.center = view.center
         view.addSubview(previewLayer)
         view.sendSubviewToBack(previewLayer)
