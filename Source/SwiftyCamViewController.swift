@@ -1059,7 +1059,7 @@ extension SwiftyCamViewController : SwiftyCamButtonDelegate {
 	/// Set UITapGesture to take photo
 
 	public func buttonWasTapped() {
-		takePhoto()
+		//takePhoto()
 	}
 
 	/// Set UILongPressGesture start to begin video
