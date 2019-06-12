@@ -233,7 +233,7 @@ open class SwiftyCamViewController: UIViewController {
 
 	/// Variable for storing current zoom scale
 
-	fileprivate var zoomScale                    = CGFloat(1.0)
+	public var zoomScale                    = CGFloat(1.0)
 
 	/// Variable for storing initial zoom scale before Pinch to Zoom begins
 
@@ -411,7 +411,7 @@ open class SwiftyCamViewController: UIViewController {
 		super.viewDidAppear(animated)
 
 		// Subscribe to device rotation notifications
-
+        self.zoomGesture(long: 1.0)
 		if shouldUseDeviceOrientation {
 			orientation.start()
 		}
@@ -528,10 +528,10 @@ open class SwiftyCamViewController: UIViewController {
 			flashView?.alpha = 0.85
 			previewLayer.addSubview(flashView!)
 		}
+        
 
         //Must be fetched before on main thread
         let previewOrientation = previewLayer.videoPreviewLayer.connection!.videoOrientation
-
 		sessionQueue.async { [unowned self] in
 			if !movieFileOutput.isRecording {
 				if UIDevice.current.isMultitaskingSupported {
@@ -1061,13 +1061,38 @@ extension SwiftyCamViewController : SwiftyCamButtonDelegate {
 	public func buttonWasTapped() {
 		//takePhoto()
 	}
+    
+    public func getZoomScale() -> CGFloat {
+        return zoomScale
+    }
 
 	/// Set UILongPressGesture start to begin video
 
 	public func buttonDidBeginLongPress() {
 		startVideoRecording()
 	}
-
+    
+    public func zoomGesture(long: CGFloat) {
+        self.zoomScale = long
+        do {
+            let captureDevice = AVCaptureDevice.devices().first
+            try captureDevice?.lockForConfiguration()
+            
+            print("zoomScale: \(zoomScale)")
+            captureDevice?.videoZoomFactor = self.zoomScale
+            
+            // Call Delegate function with current zoom scale
+            DispatchQueue.main.async {
+                self.cameraDelegate?.swiftyCam(self, didChangeZoomLevel: self.zoomScale)
+            }
+            
+            captureDevice?.unlockForConfiguration()
+            
+        } catch {
+            print("[SwiftyCam]: Error locking configuration")
+        }
+    }
+    
 	/// Set UILongPressGesture begin to begin end video
 
 
@@ -1141,6 +1166,8 @@ extension SwiftyCamViewController {
 			print("[SwiftyCam]: Error locking configuration")
 		}
 	}
+    
+    
 
 	/// Handle single tap gesture
 
@@ -1238,9 +1265,9 @@ extension SwiftyCamViewController {
 	*/
 
 	fileprivate func addGestureRecognizers() {
-		pinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(zoomGesture(pinch:)))
-		pinchGesture.delegate = self
-		previewLayer.addGestureRecognizer(pinchGesture)
+        pinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(zoomGesture(pinch:)))
+        pinchGesture.delegate = self
+        previewLayer.addGestureRecognizer(pinchGesture)
 
 		let singleTapGesture = UITapGestureRecognizer(target: self, action: #selector(singleTapGesture(tap:)))
 		singleTapGesture.numberOfTapsRequired = 1
@@ -1251,10 +1278,10 @@ extension SwiftyCamViewController {
 		doubleTapGesture.numberOfTapsRequired = 2
 		doubleTapGesture.delegate = self
 		previewLayer.addGestureRecognizer(doubleTapGesture)
-
-        panGesture = UIPanGestureRecognizer(target: self, action: #selector(panGesture(pan:)))
-        panGesture.delegate = self
-        previewLayer.addGestureRecognizer(panGesture)
+//
+//        panGesture = UIPanGestureRecognizer(target: self, action: #selector(panGesture(pan:)))
+//        panGesture.delegate = self
+//        previewLayer.addGestureRecognizer(panGesture)
 	}
 }
 

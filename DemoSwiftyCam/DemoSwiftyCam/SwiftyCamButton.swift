@@ -38,6 +38,10 @@ public protocol SwiftyCamButtonDelegate: class {
     
     func longPressDidReachMaximumDuration()
     
+    func zoomGesture(long: CGFloat)
+    
+    func getZoomScale() -> CGFloat
+    
     /// Sets the maximum duration of the video recording
     
     func setMaxiumVideoDuration() -> Double
@@ -63,6 +67,9 @@ open class SwiftyCamButton: UIButton {
     fileprivate var timer : Timer?
     
     /// Initialization Declaration
+    
+    var _panStartPoint: CGPoint = .zero
+    var _panStartZoom: CGFloat = 0.0
     
     override public init(frame: CGRect) {
         super.init(frame: frame)
@@ -92,11 +99,28 @@ open class SwiftyCamButton: UIButton {
         guard buttonEnabled == true else {
             return
         }
-        
         switch sender.state {
         case .began:
             delegate?.buttonDidBeginLongPress()
+            let previousZoom = delegate?.getZoomScale()
+            _panStartPoint = sender.location(in: superview)
+            _panStartZoom = previousZoom ?? 1.0
             startTimer()
+        case .changed:
+            let newPoint = sender.location(in: superview)
+            let zoomEndPoint: CGFloat = self.superview?.center.y ?? 0.0 - 50.0
+            let diff = _panStartPoint.y - 50.0 - newPoint.y
+            
+            var newvalue =  min(10.0, (diff / 30.0))
+            if newvalue < 0.0 {
+                newvalue = 0.0
+            }
+            let newZoomValue = _panStartZoom + newvalue
+            let minZoom = max(1.0, newZoomValue)
+            delegate?.zoomGesture(long: minZoom)
+            
+            break
+            
         case .cancelled, .ended, .failed:
             invalidateTimer()
             delegate?.buttonDidEndLongPress()
